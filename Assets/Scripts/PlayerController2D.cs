@@ -4,6 +4,8 @@ public class PlayerController2D : MonoBehaviour
 {
     [Header("Move")]
     public float moveSpeed = 6f;
+    [Range(0f, 1f)]
+    public float airControlMultiplier = 0.4f; // 空中操控系数
 
     [Header("Jump")]
     public float jumpForce = 12f;
@@ -11,9 +13,15 @@ public class PlayerController2D : MonoBehaviour
     public Transform groundCheck;
     public float groundCheckRadius = 0.15f;
 
+    [Header("Wall Check")]
+    public float wallCheckDistance = 0.05f;
+    public LayerMask wallLayer;
+
     private Rigidbody2D rb;
     private float inputX;
     private bool isGrounded;
+    private bool isTouchingWall;
+    private int wallDir; // -1 左墙，1 右墙
 
     void Awake()
     {
@@ -24,41 +32,85 @@ public class PlayerController2D : MonoBehaviour
     {
         inputX = Input.GetAxisRaw("Horizontal");
 
-        // 地面检测（用一个小圆检测脚底）
-        if (groundCheck != null)
-        {
-            isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
-        }
+        // 地面检测
+        isGrounded = Physics2D.OverlapCircle(
+            groundCheck.position,
+            groundCheckRadius,
+            groundLayer
+        );
 
         // 跳跃
         if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
         {
-            rb.velocity = new Vector2(rb.velocity.x, 0f); // 清掉下落速度，手感更稳定
+            rb.velocity = new Vector2(rb.velocity.x, 0f);
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
     }
 
-    public float moveForce = 40f;
-    public float maxSpeed = 6f;
-
     void FixedUpdate()
     {
-        rb.AddForce(Vector2.right * inputX * moveForce);
+        CheckWall();
 
-        // 限速
-        if (Mathf.Abs(rb.velocity.x) > maxSpeed)
+        float targetSpeed = inputX * moveSpeed;
+
+        float control = isGrounded ? 1f : airControlMultiplier;
+        float newX = Mathf.MoveTowards(
+            rb.velocity.x,
+            targetSpeed,
+            moveSpeed * control * Time.fixedDeltaTime * 10f
+        );
+
+        // 防止贴墙横移
+        if (!isGrounded && isTouchingWall && inputX == wallDir)
         {
-            rb.velocity = new Vector2(
-                Mathf.Sign(rb.velocity.x) * maxSpeed,
-                rb.velocity.y
-            );
+            newX = rb.velocity.x;
+        }
+
+        rb.velocity = new Vector2(newX, rb.velocity.y);
+    }
+
+
+    void CheckWall()
+    {
+        isTouchingWall = false;
+        wallDir = 0;
+
+        RaycastHit2D hitRight = Physics2D.Raycast(
+            transform.position,
+            Vector2.right,
+            wallCheckDistance,
+            wallLayer
+        );
+
+        RaycastHit2D hitLeft = Physics2D.Raycast(
+            transform.position,
+            Vector2.left,
+            wallCheckDistance,
+            wallLayer
+        );
+
+        if (hitRight.collider != null)
+        {
+            isTouchingWall = true;
+            wallDir = 1;
+        }
+        else if (hitLeft.collider != null)
+        {
+            isTouchingWall = true;
+            wallDir = -1;
         }
     }
 
     void OnDrawGizmosSelected()
     {
-        if (groundCheck == null) return;
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        }
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.right * wallCheckDistance);
+        Gizmos.DrawLine(transform.position, transform.position + Vector3.left * wallCheckDistance);
     }
 }
