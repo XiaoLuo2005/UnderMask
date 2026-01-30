@@ -1,24 +1,23 @@
-using UnityEngine;
+ï»¿using UnityEngine;
+
+// å®šä¹‰é¢å…·ç±»å‹çš„æšä¸¾
+public enum MaskType { None, Anger, Anxiety, Sadness }
 
 public class CollectibleItem : MonoBehaviour
 {
-    [Tooltip("´¥·¢ÏûÊ§µÄ±êÇ©£¬Ä¬ÈÏÎªPlayer")]
+    [Header("é¢å…·è®¾ç½®")]
+    public MaskType maskType = MaskType.None; // åœ¨ç¼–è¾‘å™¨é‡Œé€‰æ‹©é¢å…·ç±»å‹
+
+    [Header("åŸºç¡€è®¾ç½®")]
     public string targetTag = "Player";
-
-    [Tooltip("ÊÇ·ñÔÚ´¥·¢Ê±²¥·ÅÒôĞ§")]
     public bool playSound = true;
-
-    [Tooltip("ÏûÊ§ÑÓ³ÙÊ±¼ä£¨Ãë£©")]
     public float disappearDelay = 0f;
-
-    [Tooltip("Ê°È¡ÒôĞ§")]
     public AudioClip pickupSound;
 
     private AudioSource audioSource;
 
     void Start()
     {
-        // ³¢ÊÔ»ñÈ¡»òÌí¼ÓAudioSource×é¼ş
         audioSource = GetComponent<AudioSource>();
         if (audioSource == null && playSound)
         {
@@ -26,37 +25,30 @@ public class CollectibleItem : MonoBehaviour
         }
     }
 
-    // Ê¹ÓÃOnTriggerEnter2D£¨ĞèÒª½«Åö×²ÌåÉèÎª´¥·¢Æ÷£©
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag(targetTag))
         {
-            OnPlayerTouch();
-        }
-    }
+            // æ ¸å¿ƒä¿®æ”¹ï¼šç¢°åˆ°ç©å®¶æ—¶ï¼Œé€šçŸ¥ç©å®¶å¼€å¯å¯¹åº”é¢å…·èƒ½åŠ›
+            PlayerAbility playerAbility = other.GetComponent<PlayerAbility>();
+            if (playerAbility != null)
+            {
+                playerAbility.UnlockMask(maskType);
+            }
 
-    // Ê¹ÓÃOnCollisionEnter2D£¨ĞèÒªÎïÀíÅö×²£©
-    void OnCollisionEnter2D(Collision2D collision)
-    {
-        Debug.Log("×²µ½ÁË£º" + collision.gameObject.name);
-        if (collision.gameObject.CompareTag(targetTag))
-        {
             OnPlayerTouch();
         }
     }
 
     void OnPlayerTouch()
     {
-        // ²¥·ÅÒôĞ§
         if (playSound && pickupSound != null && audioSource != null)
         {
             audioSource.PlayOneShot(pickupSound);
         }
 
-        // ÑÓ³ÙÏú»ÙÎïÌå
         if (disappearDelay > 0)
         {
-            // ÏÈ½ûÓÃäÖÈ¾ºÍÅö×²£¬ÈÃÎïÌå¿´ÆğÀ´ÏûÊ§ÁË
             DisableVisuals();
             Destroy(gameObject, disappearDelay);
         }
@@ -68,11 +60,9 @@ public class CollectibleItem : MonoBehaviour
 
     void DisableVisuals()
     {
-        // ½ûÓÃäÖÈ¾Æ÷£¬ÈÃÎïÌå²»¿É¼û
         SpriteRenderer renderer = GetComponent<SpriteRenderer>();
         if (renderer != null) renderer.enabled = false;
 
-        // ½ûÓÃÅö×²Ìå£¬·ÀÖ¹ÖØ¸´´¥·¢
         Collider2D collider = GetComponent<Collider2D>();
         if (collider != null) collider.enabled = false;
     }
