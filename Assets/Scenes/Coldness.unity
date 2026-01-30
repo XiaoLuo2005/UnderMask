@@ -252925,7 +252925,7 @@ MonoBehaviour:
   stopDistance: 0.02
   groundLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   groundCheck: {fileID: 113874695}
   groundCheckRadius: 0.15
   wallCheckDistance: 0.05
@@ -253160,7 +253160,7 @@ MonoBehaviour:
   jumpForce: 8
   groundLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   groundCheck: {fileID: 890336302}
   groundCheckRadius: 0.2
   wallCheckDistance: 0.05
@@ -254277,7 +254277,7 @@ MonoBehaviour:
   stopDistance: 0.02
   groundLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   groundCheck: {fileID: 1706810829}
   groundCheckRadius: 0.15
   wallCheckDistance: 0.05
