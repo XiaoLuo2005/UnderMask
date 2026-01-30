@@ -38,9 +38,21 @@ public class PlayerController2D : MonoBehaviour
         }
     }
 
+    public float moveForce = 40f;
+    public float maxSpeed = 6f;
+
     void FixedUpdate()
     {
-        rb.velocity = new Vector2(inputX * moveSpeed, rb.velocity.y);
+        rb.AddForce(Vector2.right * inputX * moveForce);
+
+        // 限速
+        if (Mathf.Abs(rb.velocity.x) > maxSpeed)
+        {
+            rb.velocity = new Vector2(
+                Mathf.Sign(rb.velocity.x) * maxSpeed,
+                rb.velocity.y
+            );
+        }
     }
 
     void OnDrawGizmosSelected()
