@@ -3,16 +3,7 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags:
-  - Spikes
-<<<<<<< HEAD
-  - Water
-  - Checkpoint
-=======
-  - StreetLight
-  - Checkpoint
-  - AnxietyEnemy
->>>>>>> 19e5da67f099da40afdb747f7faadb607582420d
+  tags: []
   layers:
   - Default
   - TransparentFX
@@ -20,13 +11,13 @@ TagManager:
   - 
   - Water
   - UI
-  - Ground
-  - Light
   - 
   - 
   - 
   - 
-  - Spikes
+  - 
+  - 
+  - 
   - 
   - 
   - 
