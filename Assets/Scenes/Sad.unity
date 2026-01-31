@@ -25280,7 +25280,6 @@ MonoBehaviour:
   maskType: 3
   targetTag: Player
   playSound: 1
-  disappearDelay: 0
   pickupSound: {fileID: 0}
 --- !u!1 &838976452
 GameObject:
@@ -25770,6 +25769,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spikeTag: Spikes
   checkpointTag: Checkpoint
+  monsterTag: AnxietyEnemy
 --- !u!114 &935915426
 MonoBehaviour:
   m_ObjectHideFlags: 0
