@@ -2,12 +2,11 @@
 
 public class StreetLight : MonoBehaviour
 {
-    private bool isLit = false;
-    private AudioSource audioSource; // 新增：用于存储音效组件
+    private bool isLit = false; // 逻辑变量：标记灯是否已点亮
+    private AudioSource audioSource;
 
     void Awake()
     {
-        // 初始化时获取自身的 AudioSource 组件
         audioSource = GetComponent<AudioSource>();
     }
 
@@ -16,6 +15,7 @@ public class StreetLight : MonoBehaviour
         if (Input.GetMouseButtonDown(0))
         {
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+            // 确保你的路灯 Collider 在 "Light" 这个 Layer 上
             RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero, 0f, LayerMask.GetMask("Light"));
 
             if (hit.collider != null && hit.collider.gameObject == gameObject)
@@ -27,14 +27,8 @@ public class StreetLight : MonoBehaviour
 
     private void OnAttemptLightUp()
     {
+        // 查找玩家并检查能力
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-
-        if (players.Length == 0)
-        {
-            Debug.LogWarning("场景中没有找到任何带有 Player 标签的物体！");
-            return;
-        }
-
         bool anyPlayerHasPower = false;
 
         foreach (GameObject player in players)
@@ -47,6 +41,7 @@ public class StreetLight : MonoBehaviour
             }
         }
 
+        // 只有拥有能力且当前未点亮时才能点火
         if (anyPlayerHasPower && !isLit)
         {
             LightUp();
@@ -61,26 +56,31 @@ public class StreetLight : MonoBehaviour
     {
         isLit = true;
 
-        // 1. 播放点灯音效
+        // 1. 播放音效
         if (audioSource != null && audioSource.clip != null)
         {
             audioSource.Play();
         }
 
-        // 2. 开启视觉效果
+        // 2. 开启视觉子物体
+        SetVisuals(true);
+        Debug.Log(gameObject.name + " 已点亮！");
+    }
+
+    // --- 核心新增：供重生脚本调用的重置方法 ---
+    public void ResetLight()
+    {
+        isLit = false; // 重置逻辑状态，否则重生后无法再次点击
+        SetVisuals(false); // 重置视觉状态
+    }
+
+    // 封装视觉控制逻辑，方便维护
+    private void SetVisuals(bool state)
+    {
         Transform litPart = transform.Find("Lit");
-        if (litPart != null)
-        {
-            litPart.gameObject.SetActive(true);
-        }
+        if (litPart != null) litPart.gameObject.SetActive(state);
 
-        // 3. 开启迷雾遮罩
         Transform fogMask = transform.Find("FogMask");
-        if (fogMask != null)
-        {
-            fogMask.gameObject.SetActive(true);
-        }
-
-        Debug.Log("路灯已点亮，迷雾退散！");
+        if (fogMask != null) fogMask.gameObject.SetActive(state);
     }
 }
