@@ -20,6 +20,10 @@ public class PlayerController2D : MonoBehaviour
     [Header("Animation")]
     public Animator animator;
 
+    [Header("Audio (音效)")]
+    public AudioSource walkAudioSource; // 建议设置为循环(Loop)
+    public AudioSource jumpAudioSource; // 播放一次
+
     private Rigidbody2D rb;
     private float inputX;
     private bool isGrounded;
@@ -51,6 +55,38 @@ public class PlayerController2D : MonoBehaviour
         {
             rb.velocity = new Vector2(rb.velocity.x, 0f);
             rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+
+            // --- 播放跳跃音效 ---
+            if (jumpAudioSource != null)
+            {
+                jumpAudioSource.Play();
+            }
+        }
+
+        // --- 处理步行音效 ---
+        HandleWalkAudio();
+    }
+
+    void HandleWalkAudio()
+    {
+        if (walkAudioSource == null) return;
+
+        // 只有在地面上、有输入、且速度不为0时播放
+        bool isMovingOnGround = isGrounded && Mathf.Abs(inputX) > 0.1f && Mathf.Abs(rb.velocity.x) > 0.1f;
+
+        if (isMovingOnGround)
+        {
+            if (!walkAudioSource.isPlaying)
+            {
+                walkAudioSource.Play();
+            }
+        }
+        else
+        {
+            if (walkAudioSource.isPlaying)
+            {
+                walkAudioSource.Pause(); // 停止走动时暂停或停止音效
+            }
         }
     }
 

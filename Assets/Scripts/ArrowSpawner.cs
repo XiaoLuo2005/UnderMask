@@ -2,62 +2,50 @@
 
 public class ArrowSpawner : MonoBehaviour
 {
-    [Header("设置")]
+    [Header("箭矢设置")]
     public GameObject arrowPrefab;
     public float spawnInterval = 2f;
     public float arrowSpeed = 5f;
     public float lifeTime = 5f;
 
-    [Header("玩家检测设置")]
-    public string playerTag = "Player"; // 玩家的标签
-    private bool isPaused = false;      // 是否因为玩家靠近而暂停
+    [Header("当前状态 (仅观察)")]
+    public bool isInRange = false;    // 玩家是否在 ActiveZone 范围内
+    public bool isPaused = false;     // 玩家是否在 PauseZone 范围内
     private float timer;
 
     void Update()
     {
-        // 如果玩家不在附近，才进行计时和生成
-        if (!isPaused)
+        // 逻辑：只有当玩家进入激活区 (isInRange) 且没有进入暂停区 (isPaused) 时才发射
+        if (isInRange && !isPaused)
         {
             timer += Time.deltaTime;
-
             if (timer >= spawnInterval)
             {
                 SpawnArrow();
                 timer = 0;
             }
         }
+        else
+        {
+            // 如果玩家离开或进入暂停区，重置计时器
+            timer = 0;
+        }
     }
 
     void SpawnArrow()
     {
+        if (arrowPrefab == null) return;
+
         GameObject newArrow = Instantiate(arrowPrefab, transform.position, transform.rotation);
         Rigidbody2D rb = newArrow.GetComponent<Rigidbody2D>();
         if (rb != null)
         {
-            // 如果你的版本报错 linearVelocity，请改回 velocity
             rb.velocity = transform.right * arrowSpeed;
         }
         Destroy(newArrow, lifeTime);
     }
 
-    // --- 新增：感应区逻辑 ---
-
-    private void OnTriggerStay2D(Collider2D collision)
-    {
-        // 如果玩家进入并停留在感应区内
-        if (collision.CompareTag(playerTag))
-        {
-            isPaused = true;
-        }
-    }
-
-    private void OnTriggerExit2D(Collider2D collision)
-    {
-        // 如果玩家离开感应区
-        if (collision.CompareTag(playerTag))
-        {
-            isPaused = false;
-            // 可选：timer = 0; // 如果想让玩家离开后重新开始计时，取消此行注释
-        }
-    }
+    // 公共接口：供子物体脚本调用
+    public void SetInRange(bool status) { isInRange = status; }
+    public void SetPaused(bool status) { isPaused = status; }
 }

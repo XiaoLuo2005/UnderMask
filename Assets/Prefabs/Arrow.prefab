@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 669204562945335554}
   - component: {fileID: -4122537078565523359}
   - component: {fileID: 5247005590074106088}
-  m_Layer: 0
+  - component: {fileID: 4750290009975076040}
+  m_Layer: 12
   m_Name: Arrow
   m_TagString: Spikes
   m_Icon: {fileID: 0}
@@ -158,3 +159,16 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 1
   m_Constraints: 0
+--- !u!114 &4750290009975076040
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 987083297778883385}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fdc82faa3344d5d41b4803b25ff509b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  destroySound: {fileID: 8300000, guid: f5e6bad64dd759e42950b26e14f38779, type: 3}
