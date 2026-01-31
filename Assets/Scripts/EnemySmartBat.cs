@@ -1,196 +1,219 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// 2DµĞÈË×·»÷Íæ¼ÒµÄºËĞÄ½Å±¾£¨Æ¥ÅäÍæ¼ÒÎïÀíÂß¼­£©
 public class EnemyChasePlayer : MonoBehaviour
 {
-    [Header("×·»÷²ÎÊı")]
-    public float chaseSpeed = 6f;          // ×·»÷ÒÆ¶¯ËÙ¶È£¨ºÍÍæ¼ÒmoveSpeed¶ÔÓ¦£©
+    [Header("è¿½å‡»å‚æ•°")]
+    public float chaseSpeed = 6f;
     [Range(0f, 1f)]
-    public float airControlMultiplier = 0.4f; // ¿ÕÖĞ²Ù¿ØÏµÊı£¨ºÍÍæ¼Ò±£³ÖÒ»ÖÂ£©
-    public float chaseRange = 8f;          // ´¥·¢×·»÷µÄ¾àÀë£¨³¬³öÔòÍ£Ö¹×·»÷£©
-    public float stopDistance = 0.02f;      // ×·µ½Íæ¼ÒÉí±ßºóÍ£Ö¹µÄ¾àÀë£¨±ÜÃâÌùÁ³£©
+    public float airControlMultiplier = 0.4f;
+    public float chaseRange = 8f;
+    public float stopDistance = 0.02f;
 
-    [Header("ÎïÀí¼ì²âÉèÖÃ£¨ºÍÍæ¼ÒÒ»ÖÂ£©")]
+    [Header("æ´»åŠ¨èŒƒå›´é™åˆ¶ï¼ˆXè½´ï¼‰")]
+    public float minX = -10f;
+    public float maxX = 10f;
+
+    [Header("ç‰©ç†æ£€æµ‹è®¾ç½®")]
     public LayerMask groundLayer;
     public Transform groundCheck;
     public float groundCheckRadius = 0.15f;
     public float wallCheckDistance = 0.05f;
     public LayerMask wallLayer;
 
-    [Header("ÒıÓÃÉèÖÃ")]
-    public Transform player;               // Íæ¼ÒµÄTransform£¨ĞèÔÚ±à¼­Æ÷ÖĞ¸³Öµ£©
-    private Rigidbody2D rb;                // µĞÈË×ÔÉíµÄ¸ÕÌå×é¼ş
+    [Header("å¼•ç”¨è®¾ç½®")]
+    public Transform player;
+    public EnemyAttack enemyAttack;
 
-    // ÎïÀí×´Ì¬£¨ºÍÍæ¼ÒÒ»ÖÂ£©
+    [Tooltip("æ ¸å¿ƒï¼šæ‰€æœ‰ç¾æœ¯èµ„æºçš„çˆ¶ç‰©ä½“ã€‚ç¿»è½¬å®ƒä¼šåŒæ­¥ç¿»è½¬æ­¦å™¨ã€ç‰¹æ•ˆç­‰ã€‚")]
+    public Transform spriteRoot;
+
+    [Header("ç¾æœ¯åå¥½è®¾ç½®")]
+    [Tooltip("å¦‚æœä½ çš„åŸå§‹å›¾ç‰‡/æ¨¡å‹é»˜è®¤æ˜¯æœå·¦çœ‹çš„ï¼Œè¯·å‹¾é€‰æ­¤é¡¹ã€‚")]
+    public bool isDefaultFacingLeft = false;
+
+    private Rigidbody2D rb;
     private bool isGrounded;
     private bool isTouchingWall;
-    private int wallDir; // -1 ×óÇ½£¬1 ÓÒÇ½
+    private int wallDir;
     private bool isChasing = false;
+
+    // æ ¸å¿ƒæ ‡è®°ï¼šç©å®¶æ˜¯å¦åœ¨æ”»å‡»èŒƒå›´å†…
+    public bool isPlayerInAttackRange { get; set; }
 
     void Awake()
     {
-        // »ñÈ¡µĞÈË×ÔÉíµÄRigidbody2D×é¼ş£¨±ØĞë¹ÒÔØ£¬·ñÔòÎŞ·¨ÒÆ¶¯£©
         rb = GetComponent<Rigidbody2D>();
-        if (rb == null)
+
+        if (enemyAttack == null)
+            enemyAttack = GetComponent<EnemyAttack>();
+
+        // è‡ªåŠ¨æŸ¥æ‰¾æœºåˆ¶ï¼šå¦‚æœæ²¡æœ‰æ‰‹åŠ¨æ‹–å…¥ spriteRootï¼Œå°è¯•å¯»æ‰¾åä¸º "Sprite" çš„å­ç‰©ä½“
+        if (spriteRoot == null)
         {
-            Debug.LogError("µĞÈËÈ±ÉÙRigidbody2D×é¼ş£¡Çë¸øµĞÈËÌí¼ÓRigidbody2D", this);
+            Transform foundSprite = transform.Find("Sprite");
+            if (foundSprite != null)
+                spriteRoot = foundSprite;
+            else
+                spriteRoot = transform; // å…œåº•æ–¹æ¡ˆï¼šå®åœ¨æ²¡æœ‰å°±è½¬åŠ¨è‡ªèº«ï¼ˆä¸æ¨èï¼Œå¯èƒ½ä¼šå½±å“æŸäº›ç‰©ç†å°„çº¿ï¼‰
         }
     }
 
     void Update()
     {
-        // Èç¹ûÎ´Ö¸¶¨Íæ¼Ò£¬Ö±½Ó·µ»Ø£¨±ÜÃâ±¨´í£©
-        if (player == null)
-        {
-            Debug.LogWarning("Î´Ö¸¶¨Íæ¼Ò¶ÔÏó£¡ÇëÔÚ±à¼­Æ÷ÖĞ¸øEnemyChasePlayer½Å±¾µÄplayer¸³Öµ", this);
-            return;
-        }
+        if (player == null) return;
 
-        // µØÃæ¼ì²â£¨ºÍÍæ¼ÒÂß¼­Ò»ÖÂ£©
         isGrounded = Physics2D.OverlapCircle(
             groundCheck.position,
             groundCheckRadius,
             groundLayer
         );
 
-        // ¼ÆËãµĞÈËµ½Íæ¼ÒµÄ¾àÀë
+        // åªæœ‰ç©å®¶ä¸åœ¨æ”»å‡»èŒƒå›´æ—¶ï¼Œæ‰åˆ¤æ–­æ˜¯å¦è¿½å‡»
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-
-        // ÅĞ¶ÏÊÇ·ñ½øÈë×·»÷·¶Î§
-        isChasing = (distanceToPlayer <= chaseRange && distanceToPlayer > stopDistance);
+        isChasing = !isPlayerInAttackRange && (distanceToPlayer <= chaseRange && distanceToPlayer > stopDistance);
     }
 
     void FixedUpdate()
     {
         if (player == null) return;
 
-        // Ç½Ìå¼ì²â£¨ºÍÍæ¼ÒÂß¼­Ò»ÖÂ£©
         CheckWall();
 
-        // ÎïÀíÏà¹ØµÄÒÆ¶¯Âß¼­·ÅÔÚFixedUpdateÖĞ£¨Unity×î¼ÑÊµ¼ù£©
-        if (isChasing)
+        // ä¼˜å…ˆçº§é€»è¾‘ï¼šæ”»å‡»èŒƒå›´å†…åœæ­¢ > è¿½å‡» > è¶…å‡ºèŒƒå›´å¹³æ»‘åœæ­¢
+        if (isPlayerInAttackRange)
+        {
+            StopMovementCompletely();
+            // å³ä½¿åœæ­¢äº†ï¼Œå¦‚æœç©å®¶ç»•åï¼Œæ•Œäººä¹Ÿåº”è¯¥çœ‹å‘ç©å®¶
+            LookAtPlayer();
+        }
+        else if (isChasing)
         {
             ChasePlayerWithPlayerPhysics();
         }
         else
         {
-            // Í£Ö¹×·»÷Ê±£¬Æ½»¬¼õËÙ£¨¶ø²»ÊÇÖ±½ÓÇåÁã£¬¸ü·ûºÏÎïÀí£©
             StopChaseSmoothly();
         }
+
+        ClampPositionX();
     }
 
-    // ºËĞÄ×·»÷Âß¼­£ºÊ¹ÓÃºÍÍæ¼ÒÍêÈ«Ò»ÖÂµÄÎïÀí¹æÔò×·»÷
     void ChasePlayerWithPlayerPhysics()
     {
-        // ¼ÆËãµĞÈËĞèÒªÒÆ¶¯µÄ·½Ïò£¨Ö»ÓĞË®Æ½·½Ïò£¬ºÍÍæ¼ÒÒÆ¶¯Âß¼­Ò»ÖÂ£©
-        float targetDirection = Mathf.Sign(player.position.x - transform.position.x);
+        float clampedTargetX = Mathf.Clamp(player.position.x, minX, maxX);
+        float targetDirection = Mathf.Sign(clampedTargetX - transform.position.x);
 
-        // ¼ÆËãÄ¿±êËÙ¶È£¨ºÍÍæ¼ÒµÄtargetSpeedÂß¼­Ò»ÖÂ£©
         float targetSpeed = targetDirection * chaseSpeed;
-
-        // µØÃæ/¿ÕÖĞ²Ù¿ØÏµÊı£¨ºÍÍæ¼ÒÍêÈ«Ò»ÖÂ£©
         float control = isGrounded ? 1f : airControlMultiplier;
 
-        // Æ½»¬²åÖµµ½Ä¿±êËÙ¶È£¨ºËĞÄÎïÀíÂß¼­£¬ºÍÍæ¼ÒMathf.MoveTowardsÒ»ÖÂ£©
         float newX = Mathf.MoveTowards(
             rb.velocity.x,
             targetSpeed,
             chaseSpeed * control * Time.fixedDeltaTime * 10f
         );
 
-        // ·ÀÖ¹ÌùÇ½ºáÒÆ£¨ºÍÍæ¼ÒÂß¼­Ò»ÖÂ£©
+        // æ’å¢™æ£€æµ‹ï¼šå¦‚æœåœ¨ç©ºä¸­ä¸”æ’å¢™ï¼Œç»´æŒå½“å‰é€Ÿåº¦ä¸è¢«é‡ç½®
         if (!isGrounded && isTouchingWall && targetDirection == wallDir)
-        {
             newX = rb.velocity.x;
-        }
 
-        // Ó¦ÓÃËÙ¶È£¨Ö»ĞŞ¸ÄXÖá£¬YÖáÓÉÎïÀíÒıÇæ×ÔÈ»¿ØÖÆ£©
         rb.velocity = new Vector2(newX, rb.velocity.y);
 
-        // ÈÃµĞÈË³¯ÏòÍæ¼Ò£¨×óÓÒ·­×ª£©
+        // è°ƒç”¨ç¿»è½¬æ–¹æ³•
         FlipTowardsPlayer(targetDirection);
     }
 
-    // Æ½»¬Í£Ö¹×·»÷£¨±ÜÃâÍ»È»Í£×¡µÄÉúÓ²¸Ğ£©
+    // ä¸“é—¨ç”¨äºåœæ­¢æ—¶ä¹Ÿè¦çœ‹å‘ç©å®¶çš„è¾…åŠ©æ–¹æ³•
+    void LookAtPlayer()
+    {
+        float dir = Mathf.Sign(player.position.x - transform.position.x);
+        FlipTowardsPlayer(dir);
+    }
+
     void StopChaseSmoothly()
     {
-        float stopControl = isGrounded ? 1f : airControlMultiplier;
-        float newX = Mathf.MoveTowards(
-            rb.velocity.x,
-            0f,
-            chaseSpeed * stopControl * Time.fixedDeltaTime * 15f // 15f±ÈÒÆ¶¯Ê±µÄ10fÉÔ´ó£¬Í£Ö¹¸ü¿ì
-        );
+        float control = isGrounded ? 1f : airControlMultiplier;
+        float newX = Mathf.MoveTowards(rb.velocity.x, 0f, chaseSpeed * control * Time.fixedDeltaTime * 15f);
         rb.velocity = new Vector2(newX, rb.velocity.y);
     }
 
-    // Ç½Ìå¼ì²âÂß¼­£¨ÍêÈ«¸´ÖÆÍæ¼ÒµÄCheckWall·½·¨£©
+    void StopMovementCompletely()
+    {
+        rb.velocity = new Vector2(0, rb.velocity.y);
+    }
+
+    void ClampPositionX()
+    {
+        Vector3 pos = transform.position;
+        if (pos.x < minX)
+        {
+            pos.x = minX;
+            rb.velocity = new Vector2(0, rb.velocity.y);
+        }
+        else if (pos.x > maxX)
+        {
+            pos.x = maxX;
+            rb.velocity = new Vector2(0, rb.velocity.y);
+        }
+        transform.position = pos;
+    }
+
     void CheckWall()
     {
         isTouchingWall = false;
         wallDir = 0;
 
-        RaycastHit2D hitRight = Physics2D.Raycast(
-            transform.position,
-            Vector2.right,
-            wallCheckDistance,
-            wallLayer
-        );
-
-        RaycastHit2D hitLeft = Physics2D.Raycast(
-            transform.position,
-            Vector2.left,
-            wallCheckDistance,
-            wallLayer
-        );
-
-        if (hitRight.collider != null)
+        if (Physics2D.Raycast(transform.position, Vector2.right, wallCheckDistance, wallLayer))
         {
             isTouchingWall = true;
             wallDir = 1;
         }
-        else if (hitLeft.collider != null)
+        else if (Physics2D.Raycast(transform.position, Vector2.left, wallCheckDistance, wallLayer))
         {
             isTouchingWall = true;
             wallDir = -1;
         }
     }
 
-    // ÈÃµĞÈËµÄSprite³¯ÏòÍæ¼Ò£¨¼ò»¯°æ£¬»ùÓÚ·½ÏòÖµ£©
+    /// <summary>
+    /// æ ¸å¿ƒé€»è¾‘ï¼šåŸºäº spriteRoot çš„ localScale è¿›è¡Œç¿»è½¬
+    /// </summary>
     void FlipTowardsPlayer(float direction)
     {
-        if (direction > 0 && transform.localScale.x < 0)
+        if (spriteRoot == null || direction == 0) return;
+
+        Vector3 scale = spriteRoot.localScale;
+
+        // 1. è·å–åŸºç¡€æœå‘ (å‘å³ä¸ºæ­£ï¼Œå‘å·¦ä¸ºè´Ÿ)
+        float targetScaleX = direction > 0 ? 1f : -1f;
+
+        // 2. å¦‚æœç¾æœ¯èµ„æºé»˜è®¤æ˜¯æœå·¦ç”»çš„ï¼Œåˆ™åè½¬é€»è¾‘
+        if (isDefaultFacingLeft)
         {
-            // Íæ¼ÒÔÚÓÒ²à£¬µĞÈË³¯ÓÒ
-            transform.localScale = new Vector3(Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
+            targetScaleX *= -1f;
         }
-        else if (direction < 0 && transform.localScale.x > 0)
-        {
-            // Íæ¼ÒÔÚ×ó²à£¬µĞÈË³¯×ó
-            transform.localScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
-        }
+
+        // 3. åº”ç”¨ç¼©æ”¾ï¼ˆä¿æŒåŸæœ‰çš„ç¼©æ”¾å€æ•°ï¼Œåªæ”¹ç¬¦å·ï¼‰
+        scale.x = Mathf.Abs(scale.x) * targetScaleX;
+        spriteRoot.localScale = scale;
     }
 
-    // ±à¼­Æ÷Gizmos£º»æÖÆ×·»÷·¶Î§ºÍÎïÀí¼ì²âÇøÓò£¨·½±ãµ÷ÊÔ£©
     void OnDrawGizmosSelected()
     {
-        // »æÖÆ×·»÷·¶Î§
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, chaseRange);
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, stopDistance);
 
-        // »æÖÆµØÃæ¼ì²â
         if (groundCheck != null)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
 
-        // »æÖÆÇ½Ìå¼ì²â
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawLine(transform.position, transform.position + Vector3.right * wallCheckDistance);
-        Gizmos.DrawLine(transform.position, transform.position + Vector3.left * wallCheckDistance);
+        Gizmos.color = Color.magenta;
+        Gizmos.DrawLine(new Vector3(minX, transform.position.y - 1, 0),
+                        new Vector3(minX, transform.position.y + 1, 0));
+        Gizmos.DrawLine(new Vector3(maxX, transform.position.y - 1, 0),
+                        new Vector3(maxX, transform.position.y + 1, 0));
     }
 }

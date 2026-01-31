@@ -14,6 +14,8 @@ public class CollectibleItem : MonoBehaviour
     [Tooltip(" ∞»°“Ù–ß")]
     public AudioClip pickupSound;
 
+    public PlayerAttack playerAttack;
+
     private AudioSource audioSource;
 
     void Start()
@@ -64,6 +66,7 @@ public class CollectibleItem : MonoBehaviour
         {
             Destroy(gameObject);
         }
+        playerAttack.UnlockAttack();
     }
 
     void DisableVisuals()

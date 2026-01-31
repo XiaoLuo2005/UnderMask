@@ -5,7 +5,7 @@ using UnityEngine;
 public class MagmaProjectile : MonoBehaviour
 {
     public float speed = 10f;
-    public int damage = 1;
+    public int damage = 2;
     public float autoDestroyTime = 2f;
 
     Rigidbody2D rb;
@@ -24,12 +24,14 @@ public class MagmaProjectile : MonoBehaviour
     void OnCollisionEnter2D(Collision2D col)
     {
         //// 命中玩家
-        //if (col.collider.CompareTag("Player"))
-        //{
-        //    var hp = col.collider.GetComponent<PlayerHealth>();
-        //    if (hp != null)
-        //        hp.TakeDamage(damage);
-        //}
+        if (col.collider.CompareTag("Player"))
+        {
+            Debug.Log("岩浆攻击到玩家");
+            var hp = col.collider.GetComponentInParent<PlayerHealth>();
+
+            if (hp != null)
+                hp.TakeDamage(damage);
+        }
 
         // 命中任何实体就消失（地面/平台/墙）
         Destroy(gameObject);
