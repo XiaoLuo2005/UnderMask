@@ -5,6 +5,7 @@ public class PlayerRespawn : MonoBehaviour
     [Header("标签设置")]
     public string spikeTag = "Spikes";
     public string checkpointTag = "Checkpoint";
+    public string monsterTag = "AnxietyEnemy";
 
     private Vector3 currentCheckpoint;
 
@@ -28,7 +29,7 @@ public class PlayerRespawn : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D collision)
     {
         // 碰到地刺
-        if (collision.CompareTag(spikeTag))
+        if (collision.CompareTag(spikeTag) || collision.CompareTag(monsterTag))
         {
             Respawn();
         }
@@ -57,6 +58,12 @@ public class PlayerRespawn : MonoBehaviour
         if (rb != null)
         {
             rb.velocity = Vector2.zero;
+        }
+
+        AnxietyEnemy[] enemies = FindObjectsOfType<AnxietyEnemy>(true);
+        foreach (AnxietyEnemy enemy in enemies)
+        {
+            enemy.ResetEnemy();
         }
     }
 }

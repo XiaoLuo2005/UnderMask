@@ -6,64 +6,35 @@ public enum MaskType { None, Anger, Anxiety, Sadness }
 public class CollectibleItem : MonoBehaviour
 {
     [Header("面具设置")]
-    public MaskType maskType = MaskType.None; // 在编辑器里选择面具类型
+    public MaskType maskType = MaskType.None;
 
     [Header("基础设置")]
     public string targetTag = "Player";
     public bool playSound = true;
-    public float disappearDelay = 0f;
-    public AudioClip pickupSound;
-
-    private AudioSource audioSource;
-
-    void Start()
-    {
-        audioSource = GetComponent<AudioSource>();
-        if (audioSource == null && playSound)
-        {
-            audioSource = gameObject.AddComponent<AudioSource>();
-        }
-    }
+    public AudioClip pickupSound; // 确保在 Inspector 里拖入了音频
 
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag(targetTag))
         {
-            // 核心修改：碰到玩家时，通知玩家开启对应面具能力
+            // 1. 碰到就直接播！
+            if (playSound && pickupSound != null)
+            {
+                // 把声音播放位置设在相机正前方，保证 2D 效果最清晰
+                Vector3 playPos = Camera.main.transform.position;
+                playPos.z = 0;
+                AudioSource.PlayClipAtPoint(pickupSound, playPos);
+            }
+
+            // 2. 通知玩家能力解锁
             PlayerAbility playerAbility = other.GetComponent<PlayerAbility>();
             if (playerAbility != null)
             {
                 playerAbility.UnlockMask(maskType);
             }
 
-            OnPlayerTouch();
-        }
-    }
-
-    void OnPlayerTouch()
-    {
-        if (playSound && pickupSound != null && audioSource != null)
-        {
-            audioSource.PlayOneShot(pickupSound);
-        }
-
-        if (disappearDelay > 0)
-        {
-            DisableVisuals();
-            Destroy(gameObject, disappearDelay);
-        }
-        else
-        {
+            // 3. 直接消失
             Destroy(gameObject);
         }
-    }
-
-    void DisableVisuals()
-    {
-        SpriteRenderer renderer = GetComponent<SpriteRenderer>();
-        if (renderer != null) renderer.enabled = false;
-
-        Collider2D collider = GetComponent<Collider2D>();
-        if (collider != null) collider.enabled = false;
     }
 }

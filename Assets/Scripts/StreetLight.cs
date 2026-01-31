@@ -3,6 +3,13 @@
 public class StreetLight : MonoBehaviour
 {
     private bool isLit = false;
+    private AudioSource audioSource; // 新增：用于存储音效组件
+
+    void Awake()
+    {
+        // 初始化时获取自身的 AudioSource 组件
+        audioSource = GetComponent<AudioSource>();
+    }
 
     void Update()
     {
@@ -20,7 +27,6 @@ public class StreetLight : MonoBehaviour
 
     private void OnAttemptLightUp()
     {
-        // 获取场景中所有带有 "Player" 标签的物体
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
 
         if (players.Length == 0)
@@ -31,14 +37,13 @@ public class StreetLight : MonoBehaviour
 
         bool anyPlayerHasPower = false;
 
-        // 遍历所有玩家物体进行检查
         foreach (GameObject player in players)
         {
             PlayerAbility ability = player.GetComponent<PlayerAbility>();
             if (ability != null && ability.canUseAnxietyPower)
             {
                 anyPlayerHasPower = true;
-                break; // 只要有一个满足条件，就可以点灯了
+                break;
             }
         }
 
@@ -56,14 +61,20 @@ public class StreetLight : MonoBehaviour
     {
         isLit = true;
 
-        // 开启名为 "Lit" 的子物体
+        // 1. 播放点灯音效
+        if (audioSource != null && audioSource.clip != null)
+        {
+            audioSource.Play();
+        }
+
+        // 2. 开启视觉效果
         Transform litPart = transform.Find("Lit");
         if (litPart != null)
         {
             litPart.gameObject.SetActive(true);
         }
 
-        // 开启名为 "FogMask" 的子物体
+        // 3. 开启迷雾遮罩
         Transform fogMask = transform.Find("FogMask");
         if (fogMask != null)
         {
