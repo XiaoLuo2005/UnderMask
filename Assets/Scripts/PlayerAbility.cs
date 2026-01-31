@@ -34,7 +34,7 @@ public class PlayerAbility : MonoBehaviour
                 break;
             case MaskType.Anxiety:
                 canUseAnxietyPower = true;
-                Debug.Log("解锁了【焦虑】面具：现在可以点燃路灯了！");
+                Debug.Log("解锁了【焦虑】面具");
                 break;
             case MaskType.Sadness:
                 canUseSadnessPower = true;
