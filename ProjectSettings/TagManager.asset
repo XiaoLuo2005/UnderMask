@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Enemy
   - Spikes
+  - Checkpoint
+  - StreetLight
+  - AnxietyEnemy
   layers:
   - Default
   - TransparentFX
@@ -14,12 +17,12 @@ TagManager:
   - Water
   - UI
   - Ground
+  - Light
   - 
   - 
   - 
   - 
-  - 
-  - 
+  - Spikes
   - 
   - 
   - Enemy

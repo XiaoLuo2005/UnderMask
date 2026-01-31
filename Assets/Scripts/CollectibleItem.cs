@@ -16,9 +16,6 @@ public class CollectibleItem : MonoBehaviour
     [Tooltip("消失时长")]
     public float disappearDelay = 0f;
 
-    [Tooltip("拾取音效")]
-    public AudioClip pickupSound;
-
     public PlayerAttack playerAttack;
 
     private AudioSource audioSource;
