@@ -30,27 +30,29 @@ public class CollectibleItem : MonoBehaviour
     }
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag(targetTag))
+        if (!other.CompareTag(targetTag)) return;
+
+        // 1) 播放音效（防 Camera.main 为空）
+        if (playSound && pickupSound != null)
         {
-            // 1. 碰到就直接播！
-            if (playSound && pickupSound != null)
-            {
-                // 把声音播放位置设在相机正前方，保证 2D 效果最清晰
-                Vector3 playPos = Camera.main.transform.position;
-                playPos.z = 0;
-                AudioSource.PlayClipAtPoint(pickupSound, playPos);
-            }
-
-            // 2. 通知玩家能力解锁
-            PlayerAbility playerAbility = other.GetComponent<PlayerAbility>();
-            if (playerAbility != null)
-            {
-                playerAbility.UnlockMask(maskType);
-            }
-
-            // 3. 直接消失
-            Destroy(gameObject);
+            Vector3 playPos = (Camera.main != null) ? Camera.main.transform.position : transform.position;
+            playPos.z = 0;
+            AudioSource.PlayClipAtPoint(pickupSound, playPos);
         }
-        playerAttack.UnlockAttack();
+
+        // 2) 通知玩家能力解锁（更稳：从父物体找）
+        PlayerAbility playerAbility = other.GetComponentInParent<PlayerAbility>();
+        if (playerAbility != null)
+            playerAbility.UnlockMask(maskType);
+
+        // 3) 解锁攻击（防空引用）
+        if (playerAttack != null)
+            playerAttack.UnlockAttack();
+        else
+            Debug.LogWarning($"{name}: playerAttack 没有绑定（Inspector 里没拖），已跳过 UnlockAttack");
+
+        // 4) 直接消失
+        Destroy(gameObject);
     }
+
 }

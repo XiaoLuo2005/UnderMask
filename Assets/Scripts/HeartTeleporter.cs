@@ -15,7 +15,7 @@ public class HeartTeleporter : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             ApplyHeartEffect();
-            Invoke("GoToStartC", 0.1f); // 稍微延迟一下，确保效果逻辑先执行
+            Invoke("GoToStartC", 2f); // 稍微延迟一下，确保效果逻辑先执行
         }
     }
 
