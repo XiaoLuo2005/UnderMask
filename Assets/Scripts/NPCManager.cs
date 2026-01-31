@@ -1,80 +1,143 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.Video;
 
 [System.Serializable]
 public class NPCGroup
 {
-    public GameObject fireAll;    // 一整片火焰（整个GameObject）
-    public GameObject maskAll;    // 一整片面具
-    public string sceneToLoad;    // 跳转场景名
+    // 火焰（碰完返回后消失）
+    public GameObject fireAll;
+    // 面具（碰完返回后显示）
+    public GameObject maskAll;
+    // 对应的小游戏场景名
+    public string gameSceneName;
+    // 对应的过场视频（场景切换前播放）
+    public VideoClip transitionVideo;
 }
+
+// NPC类型枚举（A/B/C三类）
+public enum NPCType { A, B, C }
 
 public class NPCManager : MonoBehaviour
 {
-    [Header("===== A类整片配置 =====")]
+    [Header("A类NPC配置")]
     public NPCGroup groupA;
 
-    [Header("===== B类整片配置 =====")]
+    [Header("B类NPC配置")]
     public NPCGroup groupB;
 
-    [Header("===== C类整片配置 =====")]
+    [Header("C类NPC配置")]
     public NPCGroup groupC;
 
-    private void Start()
+    [Header("序章配置")]
+    public string prologueSceneName = "Prologue"; // 填写你的序章场景名
+
+    private void Awake()
     {
-        // 进场景就恢复状态
-        ApplyVisibility(groupA, GameSave.A_Used);
-        ApplyVisibility(groupB, GameSave.B_Used);
-        ApplyVisibility(groupC, GameSave.C_Used);
+        // 订阅「场景加载完成」事件，监听返回序章
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     /// <summary>
-    /// 关键改动：
-    /// isUsed = true → 火焰消失，面具显示
-    /// isUsed = false → 火焰出现，面具隐藏
+    /// 场景加载完成后触发（仅处理序章返回）
     /// </summary>
-    private void ApplyVisibility(NPCGroup group, bool isUsed)
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        // 只有返回序章场景，才更新火焰/面具状态
+        if (scene.name == prologueSceneName)
+        {
+            ApplyNPCState(groupA, EmotionGameSave.A_Used);
+            ApplyNPCState(groupB, EmotionGameSave.B_Used);
+            ApplyNPCState(groupC, EmotionGameSave.C_Used);
+        }
+    }
+
+    /// <summary>
+    /// 真正修改火焰/面具的显隐状态（核心：返回序章后才执行）
+    /// </summary>
+    private void ApplyNPCState(NPCGroup group, bool isGameFinished)
     {
         if (group.fireAll != null)
-            group.fireAll.SetActive(!isUsed); // 已触发 → 火焰消失
+            group.fireAll.SetActive(!isGameFinished); // 完成游戏 → 火焰消失
 
         if (group.maskAll != null)
-            group.maskAll.SetActive(isUsed);  // 已触发 → 面具显示
+            group.maskAll.SetActive(isGameFinished);  // 完成游戏 → 面具显示
     }
 
-    // 触发A类（只一次）
+    // A类NPC触发入口（给TriggerOnce调用）
     public void TriggerA()
     {
-        if (GameSave.A_Used) return;
-
-        GameSave.A_Used = true;
-        ApplyVisibility(groupA, true); // 火焰消失、面具显示
-
-        if (!string.IsNullOrEmpty(groupA.sceneToLoad))
-            SceneManager.LoadScene(groupA.sceneToLoad);
+        TryTriggerNPC(groupA, ref EmotionGameSave.A_Used, NPCType.A);
     }
 
-    // 触发B类
+    // B类NPC触发入口（给TriggerOnce调用）
     public void TriggerB()
     {
-        if (GameSave.B_Used) return;
-
-        GameSave.B_Used = true;
-        ApplyVisibility(groupB, true);
-
-        if (!string.IsNullOrEmpty(groupB.sceneToLoad))
-            SceneManager.LoadScene(groupB.sceneToLoad);
+        TryTriggerNPC(groupB, ref EmotionGameSave.B_Used, NPCType.B);
     }
 
-    // 触发C类
+    // C类NPC触发入口（给TriggerOnce调用）
     public void TriggerC()
     {
-        if (GameSave.C_Used) return;
+        TryTriggerNPC(groupC, ref EmotionGameSave.C_Used, NPCType.C);
+    }
 
-        GameSave.C_Used = true;
-        ApplyVisibility(groupC, true);
+    /// <summary>
+    /// 统一处理NPC触发逻辑（防重复、禁用触发器、播放过场视频）
+    /// </summary>
+    private void TryTriggerNPC(NPCGroup group, ref bool saveFlag, NPCType npcType)
+    {
+        // 需求3：已完成游戏的NPC，不再触发任何逻辑
+        if (saveFlag) return;
 
-        if (!string.IsNullOrEmpty(groupC.sceneToLoad))
-            SceneManager.LoadScene(groupC.sceneToLoad);
+        // 1. 标记该类NPC已完成（仅记录，不立刻改显隐）
+        saveFlag = true;
+
+        // 2. 需求3：禁用该类所有NPC的触发器，转为普通碰撞体
+        DisableNPCTrigger(npcType);
+
+        // 3. 需求2：播放过场视频，完成后跳转小游戏场景
+        if (OvercastVideoManager.Instance != null && group.transitionVideo != null)
+        {
+            OvercastVideoManager.Instance.PlayTransitionVideo(group.transitionVideo, group.gameSceneName);
+        }
+        else
+        {
+            // 兜底：无视频管理器/视频时，直接跳转场景
+            SceneManager.LoadScene(group.gameSceneName);
+        }
+    }
+
+    /// <summary>
+    /// 禁用指定类型NPC的所有触发器（转为普通碰撞体）
+    /// </summary>
+    private void DisableNPCTrigger(NPCType npcType)
+    {
+        TriggerOnce[] allNPCTriggers = FindObjectsOfType<TriggerOnce>();
+        foreach (var trigger in allNPCTriggers)
+        {
+            if (trigger.type == npcType)
+            {
+                // 获取NPC的碰撞体
+                Collider2D npcCollider = trigger.GetComponent<Collider2D>();
+                if (npcCollider != null)
+                {
+                    npcCollider.isTrigger = false; // 取消触发器属性，转为普通碰撞体
+                    // 可选：开启静态刚体，让NPC产生碰撞阻挡
+                    Rigidbody2D npcRb = trigger.GetComponent<Rigidbody2D>();
+                    if (npcRb != null)
+                        npcRb.bodyType = RigidbodyType2D.Static;
+                }
+
+                // 彻底禁用触发脚本，防止后续意外触发
+                trigger.enabled = false;
+            }
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // 取消订阅场景事件，避免内存泄漏
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 }
