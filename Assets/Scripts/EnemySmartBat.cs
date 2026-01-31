@@ -14,6 +14,10 @@ public class EnemyChasePlayer : MonoBehaviour
     [Header("活动范围限制（X轴）")]
     public float minX = -10f;
     public float maxX = 10f;
+    public float edgeBuffer = 0.05f;   // ⭐ 边界缓冲，防止卡边抖动
+
+    [Header("朝向控制")]
+    public float flipDeadZone = 0.2f;  // ⭐ 翻转死区，防止方向抖动
 
     [Header("物理检测设置")]
     public LayerMask groundLayer;
@@ -26,11 +30,10 @@ public class EnemyChasePlayer : MonoBehaviour
     public Transform player;
     public EnemyAttack enemyAttack;
 
-    [Tooltip("核心：所有美术资源的父物体。翻转它会同步翻转武器、特效等。")]
+    [Tooltip("美术资源父节点")]
     public Transform spriteRoot;
 
     [Header("美术偏好设置")]
-    [Tooltip("如果你的原始图片/模型默认是朝左看的，请勾选此项。")]
     public bool isDefaultFacingLeft = false;
 
     private Rigidbody2D rb;
@@ -39,7 +42,6 @@ public class EnemyChasePlayer : MonoBehaviour
     private int wallDir;
     private bool isChasing = false;
 
-    // 核心标记：玩家是否在攻击范围内
     public bool isPlayerInAttackRange { get; set; }
 
     void Awake()
@@ -49,14 +51,10 @@ public class EnemyChasePlayer : MonoBehaviour
         if (enemyAttack == null)
             enemyAttack = GetComponent<EnemyAttack>();
 
-        // 自动查找机制：如果没有手动拖入 spriteRoot，尝试寻找名为 "Sprite" 的子物体
         if (spriteRoot == null)
         {
-            Transform foundSprite = transform.Find("Sprite");
-            if (foundSprite != null)
-                spriteRoot = foundSprite;
-            else
-                spriteRoot = transform; // 兜底方案：实在没有就转动自身（不推荐，可能会影响某些物理射线）
+            Transform found = transform.Find("Sprite");
+            spriteRoot = found != null ? found : transform;
         }
     }
 
@@ -70,9 +68,10 @@ public class EnemyChasePlayer : MonoBehaviour
             groundLayer
         );
 
-        // 只有玩家不在攻击范围时，才判断是否追击
-        float distanceToPlayer = Vector2.Distance(transform.position, player.position);
-        isChasing = !isPlayerInAttackRange && (distanceToPlayer <= chaseRange && distanceToPlayer > stopDistance);
+        float distance = Vector2.Distance(transform.position, player.position);
+        isChasing = !isPlayerInAttackRange &&
+                    distance <= chaseRange &&
+                    distance > stopDistance;
     }
 
     void FixedUpdate()
@@ -81,12 +80,10 @@ public class EnemyChasePlayer : MonoBehaviour
 
         CheckWall();
 
-        // 优先级逻辑：攻击范围内停止 > 追击 > 超出范围平滑停止
         if (isPlayerInAttackRange)
         {
             StopMovementCompletely();
-            // 即使停止了，如果玩家绕后，敌人也应该看向玩家
-            LookAtPlayer();
+            LookAtPlayer(); // ⭐ 停止也看向玩家
         }
         else if (isChasing)
         {
@@ -102,8 +99,12 @@ public class EnemyChasePlayer : MonoBehaviour
 
     void ChasePlayerWithPlayerPhysics()
     {
-        float clampedTargetX = Mathf.Clamp(player.position.x, minX, maxX);
-        float targetDirection = Mathf.Sign(clampedTargetX - transform.position.x);
+        float targetX = Mathf.Clamp(player.position.x, minX, maxX);
+        float dx = targetX - transform.position.x;
+
+        float targetDirection = 0f;
+        if (Mathf.Abs(dx) > flipDeadZone)
+            targetDirection = Mathf.Sign(dx);
 
         float targetSpeed = targetDirection * chaseSpeed;
         float control = isGrounded ? 1f : airControlMultiplier;
@@ -114,27 +115,35 @@ public class EnemyChasePlayer : MonoBehaviour
             chaseSpeed * control * Time.fixedDeltaTime * 10f
         );
 
-        // 撞墙检测：如果在空中且撞墙，维持当前速度不被重置
         if (!isGrounded && isTouchingWall && targetDirection == wallDir)
             newX = rb.velocity.x;
 
         rb.velocity = new Vector2(newX, rb.velocity.y);
 
-        // 调用翻转方法
-        FlipTowardsPlayer(targetDirection);
+        if (targetDirection != 0)
+            FlipTowardsPlayer(targetDirection);
     }
 
-    // 专门用于停止时也要看向玩家的辅助方法
     void LookAtPlayer()
     {
-        float dir = Mathf.Sign(player.position.x - transform.position.x);
-        FlipTowardsPlayer(dir);
+        float dx = player.position.x - transform.position.x;
+
+        if (Mathf.Abs(dx) < flipDeadZone)
+            return;
+
+        FlipTowardsPlayer(Mathf.Sign(dx));
     }
 
     void StopChaseSmoothly()
     {
         float control = isGrounded ? 1f : airControlMultiplier;
-        float newX = Mathf.MoveTowards(rb.velocity.x, 0f, chaseSpeed * control * Time.fixedDeltaTime * 15f);
+
+        float newX = Mathf.MoveTowards(
+            rb.velocity.x,
+            0f,
+            chaseSpeed * control * Time.fixedDeltaTime * 15f
+        );
+
         rb.velocity = new Vector2(newX, rb.velocity.y);
     }
 
@@ -146,16 +155,18 @@ public class EnemyChasePlayer : MonoBehaviour
     void ClampPositionX()
     {
         Vector3 pos = transform.position;
-        if (pos.x < minX)
+
+        if (pos.x < minX + edgeBuffer)
         {
             pos.x = minX;
             rb.velocity = new Vector2(0, rb.velocity.y);
         }
-        else if (pos.x > maxX)
+        else if (pos.x > maxX - edgeBuffer)
         {
             pos.x = maxX;
             rb.velocity = new Vector2(0, rb.velocity.y);
         }
+
         transform.position = pos;
     }
 
@@ -176,25 +187,17 @@ public class EnemyChasePlayer : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 核心逻辑：基于 spriteRoot 的 localScale 进行翻转
-    /// </summary>
     void FlipTowardsPlayer(float direction)
     {
         if (spriteRoot == null || direction == 0) return;
 
         Vector3 scale = spriteRoot.localScale;
 
-        // 1. 获取基础朝向 (向右为正，向左为负)
         float targetScaleX = direction > 0 ? 1f : -1f;
 
-        // 2. 如果美术资源默认是朝左画的，则反转逻辑
         if (isDefaultFacingLeft)
-        {
             targetScaleX *= -1f;
-        }
 
-        // 3. 应用缩放（保持原有的缩放倍数，只改符号）
         scale.x = Mathf.Abs(scale.x) * targetScaleX;
         spriteRoot.localScale = scale;
     }
@@ -211,9 +214,12 @@ public class EnemyChasePlayer : MonoBehaviour
         }
 
         Gizmos.color = Color.magenta;
-        Gizmos.DrawLine(new Vector3(minX, transform.position.y - 1, 0),
-                        new Vector3(minX, transform.position.y + 1, 0));
-        Gizmos.DrawLine(new Vector3(maxX, transform.position.y - 1, 0),
-                        new Vector3(maxX, transform.position.y + 1, 0));
+        Gizmos.DrawLine(
+            new Vector3(minX, transform.position.y - 1, 0),
+            new Vector3(minX, transform.position.y + 1, 0));
+
+        Gizmos.DrawLine(
+            new Vector3(maxX, transform.position.y - 1, 0),
+            new Vector3(maxX, transform.position.y + 1, 0));
     }
 }

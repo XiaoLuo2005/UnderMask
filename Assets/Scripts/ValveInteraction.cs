@@ -12,7 +12,11 @@ public class ValveInteraction : MonoBehaviour
     [Tooltip("阀门的动画组件（Animator）")]
     public Animator valveAnimator;
     [Tooltip("动画停止的参数名（建议设为Bool类型）")]
-    public string stopAnimationParam = "IsStop";
+    public string stopAnimationParam = "Stop";
+    [Header("阀门管理")]
+    public HeartActivator heartActivator;
+    [Header("Audio (音效)")]
+    public AudioSource valveSource;
 
     [Header("UI提示设置")]
     [Tooltip("E键提示的UI文本（TMP_Text/Text）")]
@@ -58,7 +62,11 @@ public class ValveInteraction : MonoBehaviour
     }
 
     void Update()
-    {
+    {   
+        if (!isValveStopped)
+        {
+            valveSource.Play();
+        }
         if (playerTransform == null || valveAnimator == null) return;
 
         // 1. 检测玩家是否在交互范围内
@@ -93,16 +101,22 @@ public class ValveInteraction : MonoBehaviour
     void StopValveAnimation()
     {
         isValveStopped = true;
-        // 设置动画参数停止动画（Animator需配置对应Bool参数）
+
         valveAnimator.SetBool(stopAnimationParam, true);
         Debug.Log($"[{gameObject.name}] 阀门动画已停止！");
 
-        // 隐藏提示文本
+        // 通知管理器
+        if (heartActivator != null)
+        {
+            heartActivator.OnValveStopped();
+        }
+
         if (interactTipText != null)
         {
             interactTipText.gameObject.SetActive(false);
         }
     }
+
 
     /// <summary>
     /// 可选：重置阀门动画（如需重新开启）

@@ -20,6 +20,10 @@ public class PlayerAttack : MonoBehaviour
     [Tooltip("整个动作结束释放的延迟")]
     public float releaseDelay = 1.0f;
 
+    [Header("Audio (音效)")]
+    public AudioSource attackSource; 
+
+
     private float lastAttackTime;
     private float lastFacingDir = 1f;
 
@@ -82,6 +86,7 @@ public class PlayerAttack : MonoBehaviour
         // 1. 等待打击点延迟（让伤害出现在剑挥出的瞬间）
         yield return new WaitForSeconds(hitDelay);
 
+        attackSource.Play();
         // 2. 执行伤害判定
         CheckDamage();
 

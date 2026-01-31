@@ -15,6 +15,9 @@ public class EnemyAttack : MonoBehaviour
     public Collider2D attackRange;
     public EnemyChasePlayer enemyChase;
 
+    [Header("Audio (音效)")]
+    public AudioSource attackSource;
+
     private float lastAttackTime;
     private PlayerHealth target;
     private bool isAttacking = false; // 标记位，防止重复启动协程
@@ -75,6 +78,7 @@ public class EnemyAttack : MonoBehaviour
         if (animator != null)
         {
             animator.SetTrigger("Attack");
+            attackSource.Play();
             Debug.Log($"敌人发起攻击动画");
         }
 

@@ -18,7 +18,7 @@ public class CollectibleItem : MonoBehaviour
 
     public PlayerAttack playerAttack;
 
-    private AudioSource audioSource;
+    public AudioSource audioSource;
 
     void Start()
     {
@@ -37,7 +37,7 @@ public class CollectibleItem : MonoBehaviour
         {
             Vector3 playPos = (Camera.main != null) ? Camera.main.transform.position : transform.position;
             playPos.z = 0;
-            AudioSource.PlayClipAtPoint(pickupSound, playPos);
+            audioSource.Play();
         }
 
         // 2) 通知玩家能力解锁（更稳：从父物体找）

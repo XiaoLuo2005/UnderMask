@@ -29,4 +29,9 @@ public class PlayerHealthUI : MonoBehaviour
 
         hpImage.sprite = hpSprites[hp];
     }
+    public void Refresh(int hp)
+    {
+        hp = Mathf.Clamp(hp, 0, hpSprites.Length - 1);
+        hpImage.sprite = hpSprites[hp];
+    }
 }

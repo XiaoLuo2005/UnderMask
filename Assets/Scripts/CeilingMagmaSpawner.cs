@@ -11,12 +11,12 @@ public class CeilingMagmaSpawner : MonoBehaviour
     public int spikeCount = 6;     // 同时发射数量
 
     [Header("发射节奏")]
-    public float interval = 2f;
+    public float interval = 3f;
 
     void Start()
     {
         // 1秒后开始，每隔interval秒生成一次
-        InvokeRepeating(nameof(SpawnLine), 1f, interval);
+        InvokeRepeating(nameof(SpawnLine), 3f, interval);
     }
 
     void SpawnLine()
