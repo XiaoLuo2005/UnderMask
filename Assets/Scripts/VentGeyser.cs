@@ -4,14 +4,28 @@ using UnityEngine;
 public class VentGeyser : MonoBehaviour
 {
     [Header("喷气节奏")]
-    public float offTime = 1.5f;   // 休息多久
-    public float onTime  = 0.6f;   // 喷气多久
+    public float offTime = 1.5f;
+    public float onTime = 0.6f;
     public bool startOn = false;
 
     [Header("可视效果（可选）")]
-    public GameObject visualOn;    // 喷气时显示的特效/子物体（粒子、动画等）
+    public GameObject visualOn;
+
+    [Header("动画")]
+    public Animator animator;   // 拖 Animator（或自动找）
 
     public bool IsOn { get; private set; }
+
+    private void Awake()
+    {
+        // 防止忘记拖 Animator
+        if (animator == null)
+            animator = GetComponentInChildren<Animator>();
+
+        // 初始关闭动画（很重要）
+        if (animator != null)
+            animator.enabled = false;
+    }
 
     private void Start()
     {
@@ -39,6 +53,13 @@ public class VentGeyser : MonoBehaviour
     private void SetOn(bool on)
     {
         IsOn = on;
-        if (visualOn != null) visualOn.SetActive(on);
+
+        // 特效显示/隐藏
+        if (visualOn != null)
+            visualOn.SetActive(on);
+
+        // ⭐ 关键：喷气时才播放动画
+        if (animator != null)
+            animator.enabled = on;
     }
 }
