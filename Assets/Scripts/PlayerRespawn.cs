@@ -45,6 +45,7 @@ public class PlayerRespawn : MonoBehaviour
                 glowEffect.gameObject.SetActive(true);
             }
 
+            
             Debug.Log("存档成功！");
         }
     }
