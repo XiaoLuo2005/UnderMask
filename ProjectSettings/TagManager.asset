@@ -8,6 +8,8 @@ TagManager:
   - Checkpoint
   - Enemy
   - StreetLight
+  - Spring
+  - Water
   layers:
   - Default
   - TransparentFX
