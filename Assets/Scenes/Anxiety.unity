@@ -1575,6 +1575,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: -2253911629886400664, guid: 3f0a60b59ae55e043a4cbbc2ff29f9e4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 680206972}
+    - targetCorrespondingSourceObject: {fileID: -2253911629886400664, guid: 3f0a60b59ae55e043a4cbbc2ff29f9e4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 680206975}
+    - targetCorrespondingSourceObject: {fileID: -2253911629886400664, guid: 3f0a60b59ae55e043a4cbbc2ff29f9e4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 680206978}
   m_SourcePrefab: {fileID: -8435245712485981826, guid: 3f0a60b59ae55e043a4cbbc2ff29f9e4, type: 3}
 --- !u!1 &680206971 stripped
 GameObject:
@@ -1630,11 +1636,41 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 2
   targetScene: StartC
+  returnVideoClip: {fileID: 32900000, guid: c373fa48e2268bf4293626bf34c1e362, type: 3}
 --- !u!4 &680206974 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7878350319992209165, guid: 3f0a60b59ae55e043a4cbbc2ff29f9e4, type: 3}
   m_PrefabInstance: {fileID: 680206970}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &680206975
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680206971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a9a3f075ba664e244bdafb880df0d3f2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  targetTag: Player
+  triggerOnce: 1
+--- !u!114 &680206978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 680206971}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 142608e9ce8eb7d418c7cd9d1af1eeef, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clip: {fileID: 8300000, guid: 85e1f2ea5832b834ab94e772c52e20bb, type: 3}
+  playOnce: 1
+  volume: 1
 --- !u!1 &683155945 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5319735670198987008, guid: 6448ce57464b2ec4ca447cdb84d4df6a, type: 3}
@@ -15292,6 +15328,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1384083085}
   - component: {fileID: 1384083084}
+  - component: {fileID: 1384083086}
   m_Layer: 0
   m_Name: BGMPlayer
   m_TagString: Untagged
@@ -15410,6 +15447,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1384083086
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1384083083}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53006f622a371954a834caa439d2e608, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &1396800910
 PrefabInstance:
   m_ObjectHideFlags: 0

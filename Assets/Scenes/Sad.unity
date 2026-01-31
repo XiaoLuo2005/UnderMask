@@ -30753,7 +30753,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8708936496165209048, guid: 225245386b6295e4584565e912828122, type: 3}
       propertyPath: groundCheckRadius
-      value: 14
+      value: 1.4
       objectReference: {fileID: 0}
     - target: {fileID: 8708936496165209048, guid: 225245386b6295e4584565e912828122, type: 3}
       propertyPath: groundLayer.m_Bits
@@ -32777,6 +32777,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   type: 1
   targetScene: StartC
+  returnVideoClip: {fileID: 32900000, guid: 09802bcd92425014bae35d258e375987, type: 3}
 --- !u!58 &1172602766
 CircleCollider2D:
   m_ObjectHideFlags: 0
