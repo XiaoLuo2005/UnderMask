@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 public class PlayerRespawn : MonoBehaviour
 {
@@ -8,45 +9,38 @@ public class PlayerRespawn : MonoBehaviour
     public string monsterTag = "AnxietyEnemy";
 
     private Vector3 currentCheckpoint;
+    private List<GameObject> allLevelSpikes = new List<GameObject>();
 
     void Start()
     {
-        // 1. 初始重生点设为角色当前位置
         currentCheckpoint = transform.position;
 
-        // 2. 强制隐藏场景中所有存档点的 Glow 子物体
-        GameObject[] allCheckpoints = GameObject.FindGameObjectsWithTag(checkpointTag);
-        foreach (GameObject cp in allCheckpoints)
+        // 记录场景中初始的所有地刺引用
+        GameObject[] spikes = GameObject.FindGameObjectsWithTag(spikeTag);
+        foreach (GameObject s in spikes)
         {
-            Transform glowEffect = cp.transform.Find("Glow");
-            if (glowEffect != null)
-            {
-                glowEffect.gameObject.SetActive(false); // 强制设为不可见
-            }
+            allLevelSpikes.Add(s);
         }
+
+        // 游戏开始时默认关闭所有灯
+        ResetAllLightsInScene();
     }
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // 碰到地刺
         if (collision.CompareTag(spikeTag) || collision.CompareTag(monsterTag))
         {
             Respawn();
         }
-        // 碰到存档点
         else if (collision.CompareTag(checkpointTag))
         {
-            // 更新重生点为触发时的位置
+            // 存档逻辑
             currentCheckpoint = transform.position;
 
-            // 开启当前存档点的 Glow
+            // 注意：存档点开启的通常是它自己的 Glow 或标志
             Transform glowEffect = collision.transform.Find("Glow");
-            if (glowEffect != null)
-            {
-                glowEffect.gameObject.SetActive(true);
-            }
+            if (glowEffect != null) glowEffect.gameObject.SetActive(true);
 
-            
             Debug.Log("存档成功！");
         }
     }
@@ -56,15 +50,44 @@ public class PlayerRespawn : MonoBehaviour
         transform.position = currentCheckpoint;
 
         Rigidbody2D rb = GetComponent<Rigidbody2D>();
-        if (rb != null)
+        if (rb != null) rb.velocity = Vector2.zero;
+
+        // 1. 重置敌人
+        AnxietyEnemy[] enemies = FindObjectsOfType<AnxietyEnemy>(true);
+        foreach (AnxietyEnemy enemy in enemies) enemy.ResetEnemy();
+
+        // 2. 清理箭矢，保留地刺
+        GameObject[] currentSpikes = GameObject.FindGameObjectsWithTag(spikeTag);
+        foreach (GameObject s in currentSpikes)
         {
-            rb.velocity = Vector2.zero;
+            if (!allLevelSpikes.Contains(s)) Destroy(s);
         }
 
-        AnxietyEnemy[] enemies = FindObjectsOfType<AnxietyEnemy>(true);
-        foreach (AnxietyEnemy enemy in enemies)
+        // 3. 恢复消失的地刺
+        foreach (GameObject spike in allLevelSpikes)
         {
-            enemy.ResetEnemy();
+            if (spike != null) spike.SetActive(true);
+        }
+
+        // 4. 调用路灯重置
+        ResetAllLightsInScene();
+    }
+
+    private void ResetAllLightsInScene()
+    {
+        // 关键：通过 FindObjectsOfType 找到所有挂载了 StreetLight 脚本的对象
+        StreetLight[] lights = FindObjectsOfType<StreetLight>(true);
+        foreach (StreetLight lt in lights)
+        {
+            lt.ResetLight(); // 调用路灯自己的重置函数
+        }
+
+        // 如果你的存档点 Glow 逻辑独立，也在这里关闭
+        GameObject[] checkpoints = GameObject.FindGameObjectsWithTag(checkpointTag);
+        foreach (GameObject cp in checkpoints)
+        {
+            Transform glow = cp.transform.Find("Glow");
+            if (glow != null) glow.gameObject.SetActive(false);
         }
     }
 }

@@ -5,8 +5,14 @@ TagManager:
   serializedVersion: 2
   tags:
   - Spikes
+<<<<<<< HEAD
   - Water
   - Checkpoint
+=======
+  - StreetLight
+  - Checkpoint
+  - AnxietyEnemy
+>>>>>>> 19e5da67f099da40afdb747f7faadb607582420d
   layers:
   - Default
   - TransparentFX

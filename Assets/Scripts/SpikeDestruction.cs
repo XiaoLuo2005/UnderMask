@@ -3,20 +3,16 @@
 public class SpikeDestruction : MonoBehaviour
 {
     [Header("音效设置")]
-    public AudioClip destroySound; // 在 Inspector 中拖入你的消失音效文件
+    public AudioClip destroySound;
 
     void Update()
     {
-        // 1. 监测鼠标左键点击
         if (Input.GetMouseButtonDown(0))
         {
-            // 将鼠标屏幕位置转换为世界坐标
             Vector2 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-
-            // 2. 发射射线检测点击，限定在 Spikes 层级
+            // 注意：这里 LayerMask 必须要对应你地刺所在的层级
             RaycastHit2D hit = Physics2D.Raycast(mousePos, Vector2.zero, 0f, LayerMask.GetMask("Spikes"));
 
-            // 3. 判定是否点中了当前物体
             if (hit.collider != null && hit.collider.gameObject == gameObject)
             {
                 OnAttemptDestroy();
@@ -26,7 +22,6 @@ public class SpikeDestruction : MonoBehaviour
 
     private void OnAttemptDestroy()
     {
-        // 4. 检查焦虑面具能力
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         bool hasAnxietyPower = false;
 
@@ -40,17 +35,17 @@ public class SpikeDestruction : MonoBehaviour
             }
         }
 
-        // 5. 如果有能力则播放音效并销毁
         if (hasAnxietyPower)
         {
-            // --- 新增：播放消失音效 ---
             if (destroySound != null)
             {
                 AudioSource.PlayClipAtPoint(destroySound, transform.position);
             }
 
             Debug.Log("看穿了障碍的虚幻，障碍已消失！");
-            Destroy(gameObject); // 执行销毁
+
+            // --- 核心修改：改为隐藏而不是彻底销毁 ---
+            gameObject.SetActive(false);
         }
         else
         {
