@@ -100,7 +100,6 @@ public class PlayerController2D : MonoBehaviour
         // 向右走
         if (inputX > 0.1f)
         {
-  
             animator.SetBool("Right", true);
             animator.SetBool("Left", false);
         }
