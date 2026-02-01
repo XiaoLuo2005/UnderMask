@@ -1,0 +1,13 @@
+SportsGame demo
+
+This demo shows a typical use for Resolution Magic for a static game area, in this case a sports court.
+
+This should be tested with landscape resolutions. If you view it with a portrait ratio you will see bright pink areas that represent content outside the background.
+
+A hard border is set around the canvas, which is itself fits the shape of the green court area. Some balls bounce around and collide with the hard border.
+
+Click the blue arrow button to flip gravity and watch the balls hit the upper border.
+
+Changing the zoom type to MaxSize will show more of the orange background area, where 'nice to have' content can go, such as spectators. 
+You would implement this by deciding to zoom to the Canvas or MaxSize depending on the screen size/resolution being used at runtime.
+

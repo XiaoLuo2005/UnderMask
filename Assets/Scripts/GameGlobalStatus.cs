@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// 全局游戏状态管理器（记录通关状态，跨场景保存）
+/// 全局游戏状态管理器（记录通关状态，跨场景保存，无需挂载到任何对象）
 /// </summary>
 public static class GameGlobalStatus
 {
@@ -9,6 +9,9 @@ public static class GameGlobalStatus
     public static bool IsAngryGamePassed { get; set; } = false;
     public static bool IsSadGamePassed { get; set; } = false;
     public static bool IsAnxietyGamePassed { get; set; } = false;
+
+    // 标记：是否正在播放最终结局视频（用于禁止序章BGM）
+    public static bool IsPlayingFinalVideo { get; set; } = false;
 
     /// <summary>
     /// 检查是否三个游戏全部通关
@@ -20,13 +23,14 @@ public static class GameGlobalStatus
     }
 
     /// <summary>
-    /// 重置所有通关状态（可选，用于测试）
+    /// 重置所有通关状态（可选，用于测试和重新开始游戏）
     /// </summary>
     public static void ResetAllPassStatus()
     {
         IsAngryGamePassed = false;
         IsSadGamePassed = false;
         IsAnxietyGamePassed = false;
-        Debug.Log("已重置所有游戏的通关状态为未通关");
+        IsPlayingFinalVideo = false;
+        Debug.Log("【全局状态】已重置所有游戏的通关状态为未通关");
     }
 }
