@@ -6,6 +6,9 @@ public class RisingWater : MonoBehaviour
     public float riseSpeed = 1f;
     public bool isRising = false;
 
+    [Header("回档水位偏移（可调）")]
+    public float checkpointOffsetY = -3f;   // 原来写死 -3f
+
     private float checkpointWaterY;
 
     void Start()
@@ -19,14 +22,12 @@ public class RisingWater : MonoBehaviour
             transform.position += Vector3.up * riseSpeed * Time.deltaTime;
     }
 
-    // checkpoint 触发时调用：记录水位
     public void SaveWaterLevel()
     {
-        checkpointWaterY = transform.position.y - 3f;
+        checkpointWaterY = transform.position.y + checkpointOffsetY;
         Debug.Log("SaveWaterLevel: " + checkpointWaterY);
     }
 
-    // 死亡回档时调用：恢复到记录水位
     public void ResetWaterLevel()
     {
         transform.position = new Vector3(transform.position.x, checkpointWaterY, transform.position.z);
